@@ -8,7 +8,9 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from data import OX_STATS, OX_STATS_2, OxfordPetsDataset
 import models.resnet18 as resnet18
+import models.resnet50 as resnet50
 import models.googLeNet as googLeNet
+import models.vgg as vgg
 
 '''
 train_model is a general function to train any given model.
@@ -154,8 +156,8 @@ def prepare_data(img_dir='./datasets/oxford-pets/images'):
 
 
     dataloaders = {
-        'train': DataLoader(dataset=ox_dataset_train, batch_size=32, shuffle=True, num_workers=2),
-        'test' : DataLoader(dataset=ox_dataset_test, batch_size=32, shuffle=False, num_workers=2)
+        'train': DataLoader(dataset=ox_dataset_train, batch_size=20, shuffle=True, num_workers=2),
+        'test' : DataLoader(dataset=ox_dataset_test, batch_size=20, shuffle=False, num_workers=2)
     }
     
     return dataloaders
@@ -169,11 +171,9 @@ if __name__ == "__main__":
         print("cuda not working")
     else:
         torch.cuda.empty_cache()
-        model = googLeNet.full_goog_le_net(device)
+        model = resnet50.full_resnet_50(device)
         criterion = nn.CrossEntropyLoss()
         optimizer_conv = optim.Adam(model.parameters(), lr=0.001) #, momentum=0.9)
         exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
         model = train_model(model, dataloaders, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=10, device=device)
-        persist_model(model, "goog_le_net_adv")
-        
-
+        persist_model(model, "resnet_50_adv")
