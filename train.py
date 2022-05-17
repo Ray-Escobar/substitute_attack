@@ -4,10 +4,11 @@ import copy
 import torch
 import os
 from torch import nn, optim
-import torchvision
-from torchvision import transforms, models, datasets
+from torchvision import transforms
 from torch.utils.data import DataLoader
-from data import OX_STATS_2, OxfordPetsDataset, split_dataset, OX_STATS, SPECIES
+from data import OX_STATS, OX_STATS_2, OxfordPetsDataset
+import models.resnet18 as resnet18
+import models.googLeNet as googLeNet
 
 '''
 train_model is a general function to train any given model.
@@ -25,8 +26,8 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
     best_acc = 0.0
 
     dataset_sizes = {
-        'train' : len(dataloaders['train']),
-        'test'  : len(dataloaders['test'])   
+        'train' : len(dataloaders['train'].dataset),
+        'test'  : len(dataloaders['test'].dataset)   
     }
 
     for epoch in range(num_epochs):
@@ -59,12 +60,11 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
                     loss = criterion(outputs, labels)
 
                     # backward + optimize only if in training phase
-                    # only in backwards we actually propagate the gradients!
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
 
-                # statistics
+                    # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
@@ -93,83 +93,31 @@ def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=
     model.load_state_dict(best_model_wts)
     return model
 
-def eval_model(model, dataloader, criterion):
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    test_loss, correct = 0, 0
-
-    with torch.no_grad():
-        for X, y in dataloader:
-            pred = model(X)
-            test_loss += criterion(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
-
-    test_loss /= num_batches
-    correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.2f}%, Avg loss: {test_loss:>8f} \n")
-
-
-def persist_model(model, name, path='./models'):
+def persist_model(model, name, path='./trained_models'):
     # Persist the Model
     path = os.path.join(path, f'{name}.pth')
     torch.save(model.state_dict(), path)
 
+def prepare_data(img_dir='./datasets/oxford-pets/images'):
 
-def print_report(report):
-    '''
-    Given a report, it prints it out
-    '''
-    print(
-        "test acc on clean examples (%): {:.3f}".format(
-            report.correct / report.nb_test * 100.0
-        )
-    )
-    print("test acc on FGM adversarial examples (%): {:.3f}".format(
-            report.correct_fgm / report.nb_test * 100.0
-        )
-    )
-    print(
-        "test acc on PGD adversarial examples (%): {:.3f}".format(
-            report.correct_pgd / report.nb_test * 100.0
-        )
-    )
+    # Apply transformations to the train dataset
+    # normal_transforms = transforms.Compose([
+    #     transforms.ToPILImage(),
+    #     transforms.Resize(256),
+    #     transforms.CenterCrop(224),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean=OX_STATS_2["mean"], std=OX_STATS_2["std"])
+    # ])
 
-def train_resnet_34(dataloaders):
-    # Freeze Training
-    model = models.resnet50(pretrained = True)
-    
-    num_ftrs = model.fc.in_features
+    # ox_dataset = OxfordPetsDataset(
+    #     csv_path = './datasets/oxford-pets/annotations/list.txt', 
+    #     img_dir = img_dir,
+    #     transform = normal_transforms,
+    #     row_skips=6
+    # )
 
-
-    # Here the size of each output sample is set to 2.
-# Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
-    model.fc = nn.Linear(num_ftrs, 2)
-
-    model = model.to("cpu")
-
-    # for param in model_freeze.parameters():
-    #     param.requires_grad = False
-
-    # # Parameters of newly constructed modules have requires_grad=True by default
-    # num_ftrs = model_freeze.fc.in_features
-    # model_freeze.fc = nn.Linear(num_ftrs, 2)
-
-    criterion = nn.CrossEntropyLoss()
-
-
-    # Observe that only parameters of final layer are being optimized as
-    # opposed to before.
-    optimizer_conv = optim.Adam(model.parameters(), lr=0.0001) #, momentum=0.9)
-
-    # Decay LR by a factor of 0.1 every 7 epochs
-    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
-
-    model = train_model(model, dataloaders, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=10)
-
-    persist_model(model, "resnet_34_ox1")
-
-
-if __name__ == "__main__":
+    # # print(type(ox_dataset))
+    # ox_dataset_train, ox_dataset_test = split_dataset(ox_dataset)
 
     # Apply transformations to the train dataset
     train_transforms = transforms.Compose([
@@ -178,7 +126,7 @@ if __name__ == "__main__":
         transforms.CenterCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Normalize(mean=OX_STATS_2["mean"], std=OX_STATS_2["std"])
     ])
 
     # apply the same transformations to the validation set, with the exception of the
@@ -188,27 +136,44 @@ if __name__ == "__main__":
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
+        transforms.Normalize(mean=OX_STATS["mean"], std=OX_STATS["std"])
     ])
 
+   
     ox_dataset_train = OxfordPetsDataset(
         csv_path = './datasets/oxford-pets/annotations/test.txt', 
-        img_dir = './datasets/oxford-pets/images',
+        img_dir = img_dir,
         transform = train_transforms
     )
 
     ox_dataset_test = OxfordPetsDataset(
         csv_path = './datasets/oxford-pets/annotations/trainval.txt', 
-        img_dir = './datasets/oxford-pets/images',
+        img_dir = img_dir,
         transform = test_transforms
     )
-    # train_data, test_data = split_dataset(ox_dataset)
+
 
     dataloaders = {
-        'train': DataLoader(dataset=ox_dataset_train, batch_size=64, shuffle=True, num_workers=2),
-        'test' : DataLoader(dataset=ox_dataset_test, batch_size=64, shuffle=False, num_workers=2)
+        'train': DataLoader(dataset=ox_dataset_train, batch_size=32, shuffle=True, num_workers=2),
+        'test' : DataLoader(dataset=ox_dataset_test, batch_size=32, shuffle=False, num_workers=2)
     }
+    
+    return dataloaders
 
-    train_resnet_34(dataloaders)
+if __name__ == "__main__":
+    dataloaders = prepare_data()
+
+    # train_resnet_34(dataloaders)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if device == "cpu":
+        print("cuda not working")
+    else:
+        torch.cuda.empty_cache()
+        model = googLeNet.full_goog_le_net(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer_conv = optim.Adam(model.parameters(), lr=0.001) #, momentum=0.9)
+        exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
+        model = train_model(model, dataloaders, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=10, device=device)
+        persist_model(model, "goog_le_net_adv")
+        
 

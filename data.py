@@ -1,4 +1,6 @@
 import os
+from pickle import NONE
+from random import shuffle
 import re
 import copy
 import torch
@@ -8,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset
 from torchvision import transforms
+import torchvision
 
 
 SPECIES = {
@@ -21,8 +24,8 @@ OX_STATS = {
 } 
 
 OX_STATS_2 = {
-    "mean" : (0.485, 0.456, 0.406),
-    "std"  : (0.229, 0.224, 0.225)
+    "mean" : [0.485, 0.456, 0.406],
+    "std"  : [0.229, 0.224, 0.225]
 }
 # https://discuss.pytorch.org/t/how-to-use-one-class-of-number-in-mnist/26276
 
@@ -151,6 +154,15 @@ def plot_tensor_img(img, label):
     plt.imshow(img)
     plt.show()
 
+def gallery_show(inp, title):
+    inp = inp.numpy().transpose((1,2,0))
+    inp = OX_STATS_2['std'] * inp +  OX_STATS_2['mean'] 
+    inp = np.clip(inp, 0, 1)
+    plt.imshow(inp)
+    if title is not None:
+        plt.title(title)
+    plt.pause(0.001)
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -161,28 +173,33 @@ if __name__ == "__main__":
         transforms.ToPILImage(),
         transforms.Resize((256, 256)),
         transforms.ToTensor(),
-        transforms.Normalize(ox_stats["mean"], ox_stats["std"])
+        transforms.Normalize(OX_STATS_2["mean"], OX_STATS_2["std"])
     ])
 
 
     ox_dataset = OxfordPetsDataset(
         csv_path = './datasets/oxford-pets/annotations/list.txt', 
         img_dir = './datasets/oxford-pets/images',
+        row_skips= 6,
         transform = data_transform
     )
-    # datasets.OxfordIIIPet(root='./data/cifar10', train=True, download=True, transform=transforms.ToTensor())
 
-    print(len(ox_dataset))
+    dl = torch.utils.data.DataLoader(ox_dataset, batch_size=4, shuffle=True, num_workers = 4)
 
-    train, test = split_dataset(ox_dataset)
-
-    print(len(train), len(test), len(train) + len(test))
-    # img, y = ox_dataset[16]
-    # img = inverse_normalize(img)
-    # print(img.shape[0] == 3)
-    # plot_tensor_img(img, y)
-    # print(ox_dataset.__len__())
+    inputs, classes = next(iter(dl))
+    
+    out = torchvision.utils.make_grid(inputs)
+    gallery_show(out, title = [SPECIES[x.item()] for x in classes])
+    
+    
+    # datasetxs.OxfordIIIPet(root='./data/cifar10', train=True, download=True, transform=transforms.ToTensor())
+    # img, y = ox_dataset[3400]
     # print(img.shape)
+    # # img = inverse_normalize(img)
+    # # print(img.shape[0] == 3)
+    # # plot_tensor_img(img, y)
+    # # print(ox_dataset.__len__())
+    # # print(img.shape)
     # plt.imshow(img)
     # plt.show()
 
