@@ -9,16 +9,22 @@ from torchvision import transforms, models, datasets
 from torch.utils.data import DataLoader
 from data import OX_STATS_2, OxfordPetsDataset, split_dataset, OX_STATS, SPECIES
 
-'''
-train_model is a general function to train any given model.
 
-model - model to train
-criterion - loss function
-optimizer - (SGD or Adams)
-scheduler - decreases learning rate as epochs increase
-num_epochs - amount of times to run learning step
-'''
+def models_to_train():
+    return {
+        'res_net_18': ()
+    }
+
 def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=25, device='cpu'):
+    '''
+    train_model is a general function to train any given model.
+
+    model - model to train
+    criterion - loss function
+    optimizer - (SGD or Adams)
+    scheduler - decreases learning rate as epochs increase
+    num_epochs - amount of times to run learning step
+    '''
     since = time.time()
 
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -114,27 +120,7 @@ def persist_model(model, name, path='./models'):
     path = os.path.join(path, f'{name}.pth')
     torch.save(model.state_dict(), path)
 
-
-def print_report(report):
-    '''
-    Given a report, it prints it out
-    '''
-    print(
-        "test acc on clean examples (%): {:.3f}".format(
-            report.correct / report.nb_test * 100.0
-        )
-    )
-    print("test acc on FGM adversarial examples (%): {:.3f}".format(
-            report.correct_fgm / report.nb_test * 100.0
-        )
-    )
-    print(
-        "test acc on PGD adversarial examples (%): {:.3f}".format(
-            report.correct_pgd / report.nb_test * 100.0
-        )
-    )
-
-def train_resnet_34(dataloaders):
+def train_resnet_50(dataloaders):
     # Freeze Training
     model = models.resnet50(pretrained = True)
     
@@ -142,7 +128,7 @@ def train_resnet_34(dataloaders):
 
 
     # Here the size of each output sample is set to 2.
-# Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
+    # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
     model.fc = nn.Linear(num_ftrs, 2)
 
     model = model.to("cpu")
@@ -171,6 +157,9 @@ def train_resnet_34(dataloaders):
 
 if __name__ == "__main__":
 
+
+
+
     # Apply transformations to the train dataset
     train_transforms = transforms.Compose([
         transforms.ToPILImage(),
@@ -189,7 +178,6 @@ if __name__ == "__main__":
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
     ])
 
     ox_dataset_train = OxfordPetsDataset(
