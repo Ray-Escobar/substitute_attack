@@ -1,17 +1,14 @@
-from dataclasses import replace
 import os
-from posixpath import split
-import random
 import re
 import copy
 import torch
 import pandas as pd
 from skimage import io
 import numpy as np
-import matplotlib.pyplot as plt
 from torch.utils.data import Dataset
 from torchvision import transforms, datasets
 from sklearn.model_selection import train_test_split
+from torchvision import transforms
 
 
 OX_FILE_COLS = ["Image", "Id", "Species", "Breed_Id"]
@@ -159,19 +156,12 @@ class OxfordPetsDatasetSplit(Dataset):
     def __len__(self):
         return len(self.data_frame)
 
-def generate_split_dataset(test_set_size=0.20):
-    # used to calc the normalize params
-    neutral_transforms = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-    ])
-
-
-
-    pass 
-
+def get_class_indices(dataset, class_name):
+    indices =  []
+    for i in range(len(dataset.targets)):
+        if dataset.targets[i] == class_name:
+            indices.append(i)
+    return indices
 
 def normalize_params(dataset):
     '''
@@ -212,26 +202,6 @@ def inverse_normalize(tensor, mean=(0.48141265, 0.44937795, 0.39572072), std=(0.
     tensor.mul_(std).add_(mean)
     return tensor
 
-def split_dataset(dataset, train_split=0.80):
-    '''
-    Splits a given dataset into train and test
-
-    train_split - percentage of data used for training
-    dataset     - whole dataset
-    '''
-    train_size = int(train_split * len(dataset))
-    test_size = len(dataset) - train_size
-    return torch.utils.data.random_split(dataset, [train_size, test_size])
-
-
-def plot_tensor_img(img, label):
-    '''
-    plots a single tensored image
-    '''
-    img = np.transpose(copy.deepcopy(img), (1, 2, 0))
-    plt.imshow(img)
-    plt.show()
-
 def read_oxford_pets_csv():
     df = pd.read_csv("./datasets/oxford-pets/annotations/list.txt", sep=" ", skiprows=6)
     breed_id = np.asarray(df.iloc[:, 1:3])
@@ -253,7 +223,6 @@ def read_oxford_pets_csv():
             dogs.append(item[0])
     return cats, dogs
 
-
 def __cats_dogs_split(drop_last=True):
     '''
     Splits thhe breeds of cats and dogs each 
@@ -274,13 +243,6 @@ def __split_list(items):
     picks = np.random.choice(items, len(items)//2, replace=False)
     rest = np.setdiff1d(items, picks)
     return picks, rest
-
-def get_class_indices(dataset, class_name):
-    indices =  []
-    for i in range(len(dataset.targets)):
-        if dataset.targets[i] == class_name:
-            indices.append(i)
-    return indices
 
 def log_split(labels1, labels2):
     print('| Target Split |')
@@ -405,5 +367,10 @@ if __name__ == "__main__":
     # plot_tensor_img(img, y)
     # print(ox_dataset.__len__())
     # print(img.shape)
+    # # img = inverse_normalize(img)
+    # # print(img.shape[0] == 3)
+    # # plot_tensor_img(img, y)
+    # # print(ox_dataset.__len__())
+    # # print(img.shape)
     # plt.imshow(img)
     # plt.show()
