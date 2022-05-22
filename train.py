@@ -6,7 +6,7 @@ import os
 from torch import nn, optim
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from data import OX_STATS, OxfordPetsDataset, split_dataframe
+from data import OX_STATS, STANDARD_TRANSFORM, TRAIN_TRANSFORM, OxfordPetsDataset, split_dataframe
 import models.resnet18 as resnet18
 import models.resnet50 as resnet50
 import models.googLeNet as googLeNet
@@ -110,59 +110,37 @@ def persist_model(model, name, path='./trained_models'):
 
 def prepare_data(img_dir='./datasets/oxford-pets/images'):
 
-    # Apply transformations to the train dataset
-    # normal_transforms = transforms.Compose([
+    # # Apply transformations to the train dataset
+    # train_transforms = transforms.Compose([
+    #     transforms.ToPILImage(),
+    #     transforms.Resize(256),
+    #     transforms.CenterCrop(224),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean=OX_STATS["mean"], std=OX_STATS["std"])
+    # ])
+
+    # # apply the same transformations to the validation set, with the exception of the
+    # # randomized transformation. We want the validation set to be consistent
+    # test_transforms = transforms.Compose([
     #     transforms.ToPILImage(),
     #     transforms.Resize(256),
     #     transforms.CenterCrop(224),
     #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=OX_STATS_2["mean"], std=OX_STATS_2["std"])
+    #     transforms.Normalize(mean=OX_STATS["mean"], std=OX_STATS["std"])
     # ])
-
-    # ox_dataset = OxfordPetsDataset(
-    #     csv_path = './datasets/oxford-pets/annotations/list.txt', 
-    #     img_dir = img_dir,
-    #     transform = normal_transforms,
-    #     row_skips=6
-    # )
-
-    # # print(type(ox_dataset))
-    # ox_dataset_train, ox_dataset_test = split_dataset(ox_dataset)
-
-
-
-
-    # Apply transformations to the train dataset
-    train_transforms = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=OX_STATS["mean"], std=OX_STATS["std"])
-    ])
-
-    # apply the same transformations to the validation set, with the exception of the
-    # randomized transformation. We want the validation set to be consistent
-    test_transforms = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=OX_STATS["mean"], std=OX_STATS["std"])
-    ])
 
    
     ox_dataset_train = OxfordPetsDataset(
         csv_path = './datasets/oxford-pets/annotations/test.txt', 
         img_dir = img_dir,
-        transform = train_transforms
+        transform = TRAIN_TRANSFORM
     )
 
     ox_dataset_test = OxfordPetsDataset(
         csv_path = './datasets/oxford-pets/annotations/trainval.txt', 
         img_dir = img_dir,
-        transform = test_transforms
+        transform = STANDARD_TRANSFORM
     )
 
 
@@ -177,20 +155,14 @@ def export_attributes(proj_name, attribute_name, attributes):
     attributes['mean'] = ["%.3f" % number for number in attributes['mean']]
     attributes['std'] = ["%.3f" % number for number in attributes['std']]
     j_string = json.dumps(attributes)
-
-    print(j_string)
     # Using a JSON string
     with open(f'./trained_models/{proj_name}/{attribute_name}.json', 'w') as outfile:
         outfile.write(j_string)
 
-def create_dataloaders(datasets):
-    return {
-        'train': DataLoader(dataset=datasets['train'], batch_size=64, shuffle=True, num_workers=2),
-        'test' : DataLoader(dataset=datasets['test'], batch_size=64, shuffle=False, num_workers=2)
-    }
 
 def train_disjoint_models(device, proj_name, csv_path):
-    
+    print('Starting Disjoint Training')
+    print('-'*20)
     os.mkdir(f'./trained_models/{proj_name}')
     models_map = models_to_train()
     
@@ -200,17 +172,16 @@ def train_disjoint_models(device, proj_name, csv_path):
     export_attributes(proj_name, 'substitute', stats_att)
 
     target_dl = create_dataloaders(target_data)
-    subs_dl = create_dataloaders(subs_data)
-
+    substitute_dl = create_dataloaders(subs_data)
+    criterion = nn.CrossEntropyLoss()
     
     for name, gen_model in models_map.items():
         print("Model name", name)
         print("Training target")
         torch.cuda.empty_cache()
         target = gen_model(device)
-        criterion = nn.CrossEntropyLoss()
-        exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
         optimizer_conv = optim.Adam(target.parameters(), lr=0.001) #, momentum=0.9)
+        exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
 
         
         target_model = train_model(target, target_dl, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=12, device=device)
@@ -220,12 +191,18 @@ def train_disjoint_models(device, proj_name, csv_path):
         torch.cuda.empty_cache()
         print("Training substitute")
         substitute = gen_model(device)
-        criterion = nn.CrossEntropyLoss()
+        optimizer_conv = optim.Adam(substitute.parameters(), lr=0.001) #, momentum=0.9)
         exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
-        optimizer_conv = optim.Adam(target.parameters(), lr=0.001) #, momentum=0.9)
 
-        subs_model = train_model(substitute, subs_dl, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=12, device=device)
+        subs_model = train_model(substitute, substitute_dl, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=12, device=device)
         persist_model(subs_model, f"{name}_subs", path=f'./trained_models/{proj_name}')
+
+def create_dataloaders(datasets):
+    return {
+        'train': DataLoader(dataset=datasets['train'], batch_size=64, shuffle=True, num_workers=2),
+        'test' : DataLoader(dataset=datasets['test'], batch_size=64, shuffle=False, num_workers=2)
+    }
+
 
 if __name__ == "__main__":
 
