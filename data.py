@@ -178,13 +178,13 @@ def normalize_params(dataset):
     mean_r = imgs[:,0,:,:].mean()
     mean_g = imgs[:,1,:,:].mean()
     mean_b = imgs[:,2,:,:].mean()
-    mean = (mean_r,mean_g,mean_b)
+    mean = [mean_r,mean_g,mean_b]
 
     # calculate std over each channel (r,g,b)
     std_r = imgs[:,0,:,:].std()
     std_g = imgs[:,1,:,:].std()
     std_b = imgs[:,2,:,:].std()
-    std = (std_r,std_g,std_b)
+    std = [std_r,std_g,std_b]
 
     return mean, std
 
@@ -230,7 +230,6 @@ def __cats_dogs_split(drop_last=True):
 
     c1, c2 = __split_list(BREEDS_ID["cats"])
     d1, d2 =__split_list(BREEDS_ID["dogs"])
-
     if drop_last:
         return np.concatenate((c1, d1)), np.concatenate((c2, d2[:-1]))
     else:
@@ -264,10 +263,14 @@ def log_stats(label, stats):
     print()
 
 
-def split_dataframe(csv_path, img_dir='./datasets/oxford-pets/images', skip_rows = 6):
+def split_dataframe(csv_path='./datasets/oxford-pets/annotations/list.txt', img_dir='./datasets/oxford-pets/images', test_size=0.2, skip_rows = 6):
     """
     Spits the dataset given a csv file and returns the
     split datasets into the black-box model and the substitute model.
+
+    returens:
+    - maps of target and substitute train and test data
+    - 
     """
     # split label breeds disjointly
     labels1, labels2 = __cats_dogs_split(drop_last=True)
@@ -294,18 +297,25 @@ def split_dataframe(csv_path, img_dir='./datasets/oxford-pets/images', skip_rows
     log_split(labels1, labels2)
     log_stats('Target', stats_target)
     log_stats('Subs', stats_sub)
-    __perpare_disjoint_dataset(idxs_target, stats_target, idxs_sub, stats_sub)
+    target_data = __create_model_dataset(csv_path, idxs_target, stats_target, test_size)
+    subs_data = __create_model_dataset(csv_path,  idxs_sub, stats_sub, test_size)
+    return target_data, subs_data, {
+        "split": labels1.tolist(), 
+        "mean": stats_target[0],
+        "std": stats_target[1]
+        }, {"split" : labels2.tolist(), 
+            "mean"  :  stats_sub[0],
+            "std"   :  stats_sub[1]
+            } 
 
 
-def __perpare_disjoint_dataset(idxs_target, stats_1, idxs_sub, stats_2, test_size=0.2):
-    
-
+def __create_model_dataset(csv_path, idxs, stats, test_size=0.2):
     t_train = TRAIN_TRANSFORM()
     t_test  = STANDARD_TRANSFORM()
-    t_train.transforms.append(transforms.Normalize(stats_1[0], stats_1[1]))
-    t_test.transforms.append(transforms.Normalize(stats_1[0], stats_1[1]))
-    train_idxs, test_idxs = train_test_split(idxs_target, test_size=test_size, random_state=25)
-    black_box_data = {
+    t_train.transforms.append(transforms.Normalize(stats[0], stats[1]))
+    t_test.transforms.append(transforms.Normalize(stats[0], stats[1]))
+    train_idxs, test_idxs = train_test_split(idxs, test_size=test_size, random_state=25)
+    model_dataset = {
         "train": OxfordPetsDatasetSplit(
             csv_path = csv_path, 
             img_dir = './datasets/oxford-pets/images',
@@ -321,37 +331,10 @@ def __perpare_disjoint_dataset(idxs_target, stats_1, idxs_sub, stats_2, test_siz
             transform = t_test
         )
     }
-
-    t_train = TRAIN_TRANSFORM()
-    t_test = STANDARD_TRANSFORM()
-    t_train.transforms.append(transforms.Normalize(stats_2[0], stats_2[1]))
-    t_test.transforms.append(transforms.Normalize(stats_2[0], stats_2[1]))
-    train_idxs, test_idxs = train_test_split(idxs_sub, test_size=test_size, random_state=25)
-    substitute_data = {
-        "train": OxfordPetsDatasetSplit(
-            csv_path = csv_path, 
-            img_dir = './datasets/oxford-pets/images',
-            split = train_idxs,
-            row_skips = 6,
-            transform = t_train
-        ),
-        "test": OxfordPetsDatasetSplit(
-            csv_path = csv_path, 
-            img_dir = './datasets/oxford-pets/images',
-            split = test_idxs,
-            row_skips=6,
-            transform = t_test
-        )
-    }
-
 
     # print(len(black_box_data["train"]), len(black_box_data["test"]))
     # print(black_box_data["train"].transform, black_box_data["test"].transform)
-    # print() 
-
-    # print(len(substitute_data["train"]), len(substitute_data["test"]))
-    # print(substitute_data["train"].transform, substitute_data["test"].transform)
-    return black_box_data, substitute_data
+    return model_dataset
 
 if __name__ == "__main__":
 

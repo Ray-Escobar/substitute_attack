@@ -6,16 +6,18 @@ import os
 from torch import nn, optim
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from data import OX_STATS, OX_STATS_2, OxfordPetsDataset
+from data import OX_STATS, OxfordPetsDataset, split_dataframe
 import models.resnet18 as resnet18
 import models.resnet50 as resnet50
 import models.googLeNet as googLeNet
 import models.vgg as vgg
-
+import json
 
 def models_to_train():
     return {
-        'res_net_18': ()
+        'goog_le_net': googLeNet.full_goog_le_net,
+        'res_net_18': resnet18.full_resnet_18,
+        'res_net_50': resnet50.full_resnet_50,
     }
 
 def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=25, device='cpu'):
@@ -137,7 +139,7 @@ def prepare_data(img_dir='./datasets/oxford-pets/images'):
         transforms.CenterCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean=OX_STATS_2["mean"], std=OX_STATS_2["std"])
+        transforms.Normalize(mean=OX_STATS["mean"], std=OX_STATS["std"])
     ])
 
     # apply the same transformations to the validation set, with the exception of the
@@ -171,18 +173,76 @@ def prepare_data(img_dir='./datasets/oxford-pets/images'):
     
     return dataloaders
 
-if __name__ == "__main__":
-    dataloaders = prepare_data()
+def export_attributes(proj_name, attribute_name, attributes):
+    attributes['mean'] = ["%.3f" % number for number in attributes['mean']]
+    attributes['std'] = ["%.3f" % number for number in attributes['std']]
+    j_string = json.dumps(attributes)
 
-    # train_resnet_34(dataloaders)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    if device == "cpu":
-        print("cuda not working")
-    else:
+    print(j_string)
+    # Using a JSON string
+    with open(f'./trained_models/{proj_name}/{attribute_name}.json', 'w') as outfile:
+        outfile.write(j_string)
+
+def create_dataloaders(datasets):
+    return {
+        'train': DataLoader(dataset=datasets['train'], batch_size=64, shuffle=True, num_workers=2),
+        'test' : DataLoader(dataset=datasets['test'], batch_size=64, shuffle=False, num_workers=2)
+    }
+
+def train_disjoint_models(device, proj_name, csv_path):
+    
+    # os.mkdir(f'./trained_models/{proj_name}')
+    models_map = models_to_train()
+    
+    target_data, subs_data, target_att, stats_att = split_dataframe(csv_path=csv_path)
+    
+    export_attributes(proj_name, 'target', target_att)
+    export_attributes(proj_name, 'substitute', stats_att)
+
+    target_dl = create_dataloaders(target_data)
+    subs_dl = create_dataloaders(subs_data)
+
+    
+    for name, gen_model in models_map.items():
+        print("Model name", name)
+        print("Training target")
         torch.cuda.empty_cache()
-        model = resnet50.full_resnet_50(device)
+        target = gen_model(device)
         criterion = nn.CrossEntropyLoss()
-        optimizer_conv = optim.Adam(model.parameters(), lr=0.001) #, momentum=0.9)
         exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
-        model = train_model(model, dataloaders, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=10, device=device)
-        persist_model(model, "resnet_50_adv")
+        optimizer_conv = optim.Adam(target.parameters(), lr=0.001) #, momentum=0.9)
+
+        
+        target_model = train_model(target, target_dl, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=12, device=device)
+        persist_model(target_model, f"{name}_target", path=f'./trained_models/{proj_name}')
+
+        print()
+        torch.cuda.empty_cache()
+        print("Training substitute")
+        substitute = gen_model(device)
+        criterion = nn.CrossEntropyLoss()
+        exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
+        optimizer_conv = optim.Adam(target.parameters(), lr=0.001) #, momentum=0.9)
+
+        subs_model = train_model(substitute, subs_dl, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=12, device=device)
+        persist_model(target_model, f"{name}_subs", path=f'./trained_models/{proj_name}')
+
+if __name__ == "__main__":
+
+    csv_path = './datasets/oxford-pets/annotations/list.txt'
+    dataloaders = prepare_data()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if device.type == "cpu":
+        print("WARNING: cpu training is very slow!")
+
+    train_disjoint_models(device, "test_dir", csv_path)
+    # else:
+    #     torch.cuda.empty_cache()
+    #     model = resnet50.full_resnet_50(device)
+    #     criterion = nn.CrossEntropyLoss()
+    #     optimizer_conv = optim.Adam(model.parameters(), lr=0.001) #, momentum=0.9)
+    #     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
+    #     train_disjoint_models("tester_run")
+        
+        # model = train_model(model, dataloaders, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=10, device=device)
+        # persist_model(model, "resnet_50_adv")
