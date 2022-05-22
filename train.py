@@ -191,11 +191,11 @@ def create_dataloaders(datasets):
 
 def train_disjoint_models(device, proj_name, csv_path):
     
-    # os.mkdir(f'./trained_models/{proj_name}')
+    os.mkdir(f'./trained_models/{proj_name}')
     models_map = models_to_train()
     
     target_data, subs_data, target_att, stats_att = split_dataframe(csv_path=csv_path)
-    
+
     export_attributes(proj_name, 'target', target_att)
     export_attributes(proj_name, 'substitute', stats_att)
 
@@ -225,17 +225,17 @@ def train_disjoint_models(device, proj_name, csv_path):
         optimizer_conv = optim.Adam(target.parameters(), lr=0.001) #, momentum=0.9)
 
         subs_model = train_model(substitute, subs_dl, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=12, device=device)
-        persist_model(target_model, f"{name}_subs", path=f'./trained_models/{proj_name}')
+        persist_model(subs_model, f"{name}_subs", path=f'./trained_models/{proj_name}')
 
 if __name__ == "__main__":
 
+    # dataloaders = prepare_data()
     csv_path = './datasets/oxford-pets/annotations/list.txt'
-    dataloaders = prepare_data()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if device.type == "cpu":
         print("WARNING: cpu training is very slow!")
 
-    train_disjoint_models(device, "test_dir", csv_path)
+    train_disjoint_models(device, "first_run_disjoint", csv_path)
     # else:
     #     torch.cuda.empty_cache()
     #     model = resnet50.full_resnet_50(device)
