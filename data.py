@@ -65,8 +65,8 @@ BREEDS_ID = {
 }
 
 OX_STATS = {
-    "mean" : (0.48141265, 0.44937795, 0.39572072),
-    "std"  : (0.26479402, 0.2600657, 0.26857644)
+    "mean" : [0.48141265, 0.44937795, 0.39572072],
+    "std"  : [0.26479402, 0.2600657, 0.26857644]
 } 
 
 
@@ -223,18 +223,6 @@ def read_oxford_pets_csv():
             dogs.append(item[0])
     return cats, dogs
 
-def __cats_dogs_split(drop_last=True):
-    '''
-    Splits thhe breeds of cats and dogs each 
-    '''
-
-    c1, c2 = __split_list(BREEDS_ID["cats"])
-    d1, d2 =__split_list(BREEDS_ID["dogs"])
-    if drop_last:
-        return np.concatenate((c1, d1)), np.concatenate((c2, d2[:-1]))
-    else:
-        return np.concatenate((c1, d1)), np.concatenate((c2, d2))        
-
 def __split_list(items):
     '''
     Returns 
@@ -243,27 +231,29 @@ def __split_list(items):
     rest = np.setdiff1d(items, picks)
     return picks, rest
 
-def log_split(labels1, labels2):
-    print('| Target Split |')
-    for label in labels1:
-        print(OX_BREEDS[label])
 
-    print()
-    print('| Substitute Split |')
-    for label in labels2:
-        print(OX_BREEDS[label])
-    print('-' * 20)
-    print()
+def __cats_dogs_split(cross_section, drop_last=True):
+    '''
+    Splits thhe breeds of cats and dogs each 
+    cross_section - define hoe many items each split is sharing
+    '''
 
-def log_stats(label, stats):
-    print(f'| {label} stats |')
-    print(f'Mean: {stats[0]}')
-    print(f'Std: {stats[1]}')
-    print('-' * 20)
-    print()
+    c1, c2 = __split_list(BREEDS_ID["cats"])
+    d1, d2 =__split_list(BREEDS_ID["dogs"])
+
+    
+    if drop_last:
+        splitL, splitR = np.concatenate((c1, d1)), np.concatenate((c2, d2[:-1]))
+
+        picksL = np.random.choice(splitL, cross_section, replace=False)
+        picksR = np.random.choice(splitR, cross_section, replace=False)
+        return np.concatenate((splitL, picksR)), np.concatenate((splitR, picksL))
+    else:
+        l1, l2 = np.concatenate((c1, d1)), np.concatenate((c2, d2))
+        return l1, l2
 
 
-def split_dataframe(csv_path='./datasets/oxford-pets/annotations/list.txt', img_dir='./datasets/oxford-pets/images', test_size=0.2, skip_rows = 6):
+def split_dataframe(csv_path='./datasets/oxford-pets/annotations/list.txt', img_dir='./datasets/oxford-pets/images', test_size=0.2, skip_rows = 6, cross_section=0):
     """
     Spits the dataset given a csv file and returns the
     split datasets into the black-box model and the substitute model.
@@ -273,8 +263,7 @@ def split_dataframe(csv_path='./datasets/oxford-pets/annotations/list.txt', img_
     - 
     """
     # split label breeds disjointly
-    labels1, labels2 = __cats_dogs_split(drop_last=True)
-    
+    labels1, labels2 = __cats_dogs_split(cross_section, drop_last=True)
     frame = pd.read_csv(csv_path, sep=" ", skiprows=skip_rows, names=OX_FILE_COLS)
     idxs_target, idxs_sub = frame.index[frame.Id.isin(labels1)].to_list(), frame.index[frame.Id.isin(labels2)].to_list()
 
@@ -295,18 +284,14 @@ def split_dataframe(csv_path='./datasets/oxford-pets/annotations/list.txt', img_
             ))
 
     log_split(labels1, labels2)
+    log_cross_section(np.intersect1d(labels1, labels2))
     log_stats('Target', stats_target)
     log_stats('Subs', stats_sub)
-    target_data = __create_model_dataset(csv_path, idxs_target, stats_target, test_size)
-    subs_data = __create_model_dataset(csv_path,  idxs_sub, stats_sub, test_size)
-    return target_data, subs_data, {
-        "split": labels1.tolist(), 
-        "mean": stats_target[0],
-        "std": stats_target[1]
-        }, {"split" : labels2.tolist(), 
-            "mean"  :  stats_sub[0],
-            "std"   :  stats_sub[1]
-            } 
+    target_data  = __create_model_dataset(csv_path, idxs_target, stats_target, test_size)
+    target_stats = {"split": labels1.tolist(), "mean": stats_target[0], "std": stats_target[1]}
+    subs_data    = __create_model_dataset(csv_path,  idxs_sub, stats_sub, test_size)
+    subs_stats   = {"split":labels2.tolist(), "mean":stats_sub[0], "std":stats_sub[1] }  
+    return target_data, subs_data, target_stats, subs_stats
 
 
 def __create_model_dataset(csv_path, idxs, stats, test_size=0.2):
@@ -336,12 +321,45 @@ def __create_model_dataset(csv_path, idxs, stats, test_size=0.2):
     # print(black_box_data["train"].transform, black_box_data["test"].transform)
     return model_dataset
 
+def log_split(labels1, labels2):
+    print('| Target Split |')
+    for i, label in enumerate(labels1):
+        print(f'{i+1}. {OX_BREEDS[label]}')
+
+    print()
+    print('| Substitute Split |')
+    for i, label in enumerate(labels2):
+        print(f'{i+1}. {OX_BREEDS[label]}')
+    print()
+
+def log_stats(label, stats):
+    print(f'| {label} stats |')
+    print(f'Mean: {stats[0]}')
+    print(f'Std: {stats[1]}')
+    print('-' * 20)
+    print()
+
+def log_cross_section(cross_section):
+    if (len(cross_section) == 0):
+        return
+    print('| Cross_section |')
+    print('-' * 20)
+    print('Size', len(cross_section))
+    for i, label in enumerate(cross_section):
+        print(f'{i+1}. {OX_BREEDS[label]}')
+    print()
+
+
 if __name__ == "__main__":
 
-    csv_path = './datasets/oxford-pets/annotations/list.txt'
-    split_dataframe(csv_path)
+    # csv_path = './datasets/oxford-pets/annotations/list.txt'
+    # split_dataframe(csv_path)
+    
+    # np.intersect1d()
 
-
+    split_dataframe(cross_section=5)
+    # inter = np.intersect1d(split1, split2)
+    
 
 
     # img, y = ox_dataset[16]

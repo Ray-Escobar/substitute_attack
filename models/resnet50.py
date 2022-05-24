@@ -17,11 +17,13 @@ def full_resnet_50(device, pretrained=True):
 
     return model
 
-def load_resnet_50(device, path):
+def load_resnet_50(path):
     '''
     Load a resnet_18 from some file
     '''
     model = models.resnet50(pretrained=False)
+
+    model.name = 'resnet50'
 
     num_ftrs = model.fc.in_features
     # Here the size of each output sample is set to 2.
@@ -31,6 +33,4 @@ def load_resnet_50(device, path):
     model.load_state_dict(torch.load(path))
     model.eval()
     
-    model = model.to(device)
-
     return model

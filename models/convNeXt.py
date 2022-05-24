@@ -2,22 +2,23 @@ from torchvision import models
 from torch import nn
 import torch
 
-def full_goog_le_net(device, pretrained=True):
+def full_convNext(device, pretrained=True):
     '''
     For finetuning resnet18 convNet
     '''
-    model = models.googlenet(pretrained=pretrained)
+    model = models.convnext_tiny(pretrained=pretrained)
 
-    num_ftrs = model.fc.in_features
-    # Here the size of each output sample is set to 2.
-    # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
-    model.fc = nn.Linear(num_ftrs, 2)
+    model.classifier._modules['2'] = nn.Linear(in_features=768, out_features=2, bias=True)
+    # num_ftrs = model.fc.in_features
+    # # Here the size of each output sample is set to 2.
+    # # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
+    # model.fc = nn.Linear(num_ftrs, 2)
 
     model = model.to(device)
 
     return model
 
-def load_goog_le_net(path):
+def load_convNext(path):
     '''
     Load a goog_le_net from some file
     '''

@@ -29,7 +29,7 @@ def full_resnet_18(device, pretrained=True):
     For finetuning resnet18 convNet
     '''
     model = models.resnet18(pretrained=pretrained)
-
+    print(model)
     num_ftrs = model.fc.in_features
     # Here the size of each output sample is set to 2.
     # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
@@ -39,11 +39,13 @@ def full_resnet_18(device, pretrained=True):
 
     return model
 
-def load_resnet_18(device, path):
+def load_resnet_18(path):
     '''
     Load a resnet_18 from some file
     '''
     model = models.resnet18(pretrained=False)
+
+    model.name = "resnet_18"
 
     num_ftrs = model.fc.in_features
     # Here the size of each output sample is set to 2.
@@ -51,5 +53,5 @@ def load_resnet_18(device, path):
     model.fc = nn.Linear(num_ftrs, 2)
 
     model.load_state_dict(torch.load(path))
-    
+
     return model
