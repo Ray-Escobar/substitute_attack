@@ -357,7 +357,7 @@ if __name__ == "__main__":
     
     # np.intersect1d()
 
-    split_dataframe(cross_section=5)
+    split_dataframe(cross_section=0)
     # inter = np.intersect1d(split1, split2)
     
 

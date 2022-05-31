@@ -1,0 +1,597 @@
+| Starting attacks |
+Symmetric attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+/opt/conda/lib/python3.7/site-packages/torch/nn/functional.py:780: UserWarning: Note that order of the arguments: ceil_mode and return_indices will changeto match the args list in nn.MaxPool2d in a future release.
+  warnings.warn("Note that order of the arguments: ceil_mode and return_indices will change"
+Test Error: 
+ Accuracy: 95.00%, Avg loss: 0.129714 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 98.00%, Avg loss: 0.032772 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 100.00%, Avg loss: 0.011482 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 59.000
+test acc on PGD adversarial examples (%): 16.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 87.000
+test acc on PGD adversarial examples (%): 78.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 88.000
+test acc on PGD adversarial examples (%): 85.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 80.000
+test acc on PGD adversarial examples (%): 65.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 4.000
+test acc on PGD adversarial examples (%): 2.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 82.000
+test acc on PGD adversarial examples (%): 33.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 66.000
+test acc on PGD adversarial examples (%): 40.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 64.000
+test acc on PGD adversarial examples (%): 15.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 52.000
+test acc on PGD adversarial examples (%): 0.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	59	87	88
+Res	80	4	82
+Dense	66	64	52
+	Goog 	Res 	Dense
+Goog	16	78	85
+Res	65	2	33
+Dense	40	15	0
+Cross-Section attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 97.00%, Avg loss: 0.057478 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 99.00%, Avg loss: 0.080035 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 99.00%, Avg loss: 0.025991 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 77.000
+test acc on PGD adversarial examples (%): 49.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 91.000
+test acc on PGD adversarial examples (%): 81.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 93.000
+test acc on PGD adversarial examples (%): 95.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 87.000
+test acc on PGD adversarial examples (%): 77.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 1.000
+test acc on PGD adversarial examples (%): 1.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 73.000
+test acc on PGD adversarial examples (%): 25.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 82.000
+test acc on PGD adversarial examples (%): 72.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 58.000
+test acc on PGD adversarial examples (%): 6.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 63.000
+test acc on PGD adversarial examples (%): 6.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	77	91	93
+Res	87	1	73
+Dense	82	58	63
+	Goog 	Res 	Dense
+Goog	49	81	95
+Res	77	1	25
+Dense	72	6	6
+Disjoint attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 99.00%, Avg loss: 0.041970 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 97.00%, Avg loss: 0.041579 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 98.00%, Avg loss: 0.041825 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 79.000
+test acc on PGD adversarial examples (%): 67.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 90.000
+test acc on PGD adversarial examples (%): 92.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 94.000
+test acc on PGD adversarial examples (%): 94.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 81.000
+test acc on PGD adversarial examples (%): 66.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 4.000
+test acc on PGD adversarial examples (%): 3.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 70.000
+test acc on PGD adversarial examples (%): 31.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 84.000
+test acc on PGD adversarial examples (%): 79.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 79.000
+test acc on PGD adversarial examples (%): 48.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 76.000
+test acc on PGD adversarial examples (%): 52.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	79	90	94
+Res	81	4	70
+Dense	84	79	76
+	Goog 	Res 	Dense
+Goog	67	92	94
+Res	66	3	31
+Dense	79	48	52
+Symmetric attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 97.00%, Avg loss: 0.084523 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 97.00%, Avg loss: 0.050490 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 98.00%, Avg loss: 0.031956 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 70.000
+test acc on PGD adversarial examples (%): 18.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 85.000
+test acc on PGD adversarial examples (%): 85.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 91.000
+test acc on PGD adversarial examples (%): 85.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 86.000
+test acc on PGD adversarial examples (%): 68.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 6.000
+test acc on PGD adversarial examples (%): 3.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 79.000
+test acc on PGD adversarial examples (%): 42.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 72.000
+test acc on PGD adversarial examples (%): 53.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 73.000
+test acc on PGD adversarial examples (%): 31.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 60.000
+test acc on PGD adversarial examples (%): 3.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	70	85	91
+Res	86	6	79
+Dense	72	73	60
+	Goog 	Res 	Dense
+Goog	18	85	85
+Res	68	3	42
+Dense	53	31	3
+Cross-Section attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 99.00%, Avg loss: 0.028404 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 98.00%, Avg loss: 0.035440 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 100.00%, Avg loss: 0.012881 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 76.000
+test acc on PGD adversarial examples (%): 44.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 92.000
+test acc on PGD adversarial examples (%): 82.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 89.000
+test acc on PGD adversarial examples (%): 87.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 83.000
+test acc on PGD adversarial examples (%): 75.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 2.000
+test acc on PGD adversarial examples (%): 2.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 67.000
+test acc on PGD adversarial examples (%): 28.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 79.000
+test acc on PGD adversarial examples (%): 70.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 64.000
+test acc on PGD adversarial examples (%): 13.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 60.000
+test acc on PGD adversarial examples (%): 6.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	76	92	89
+Res	83	2	67
+Dense	79	64	60
+	Goog 	Res 	Dense
+Goog	44	82	87
+Res	75	2	28
+Dense	70	13	6
+Disjoint attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 94.00%, Avg loss: 0.098263 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 94.00%, Avg loss: 0.165228 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 95.00%, Avg loss: 0.124785 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 94.000
+test acc on FGM adversarial examples (%): 83.000
+test acc on PGD adversarial examples (%): 66.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 94.000
+test acc on FGM adversarial examples (%): 86.000
+test acc on PGD adversarial examples (%): 85.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 84.000
+test acc on PGD adversarial examples (%): 87.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 94.000
+test acc on FGM adversarial examples (%): 75.000
+test acc on PGD adversarial examples (%): 65.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 94.000
+test acc on FGM adversarial examples (%): 7.000
+test acc on PGD adversarial examples (%): 6.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 67.000
+test acc on PGD adversarial examples (%): 44.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 94.000
+test acc on FGM adversarial examples (%): 85.000
+test acc on PGD adversarial examples (%): 77.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 94.000
+test acc on FGM adversarial examples (%): 75.000
+test acc on PGD adversarial examples (%): 46.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 74.000
+test acc on PGD adversarial examples (%): 56.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	83	86	84
+Res	75	7	67
+Dense	85	75	74
+	Goog 	Res 	Dense
+Goog	66	85	87
+Res	65	6	44
+Dense	77	46	56
+Symmetric attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 95.00%, Avg loss: 0.110169 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 98.00%, Avg loss: 0.089085 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 100.00%, Avg loss: 0.008063 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 66.000
+test acc on PGD adversarial examples (%): 18.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 76.000
+test acc on PGD adversarial examples (%): 75.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 95.000
+test acc on PGD adversarial examples (%): 92.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 88.000
+test acc on PGD adversarial examples (%): 66.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 5.000
+test acc on PGD adversarial examples (%): 2.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 83.000
+test acc on PGD adversarial examples (%): 34.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 95.000
+test acc on FGM adversarial examples (%): 73.000
+test acc on PGD adversarial examples (%): 39.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 98.000
+test acc on FGM adversarial examples (%): 62.000
+test acc on PGD adversarial examples (%): 9.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 100.000
+test acc on FGM adversarial examples (%): 44.000
+test acc on PGD adversarial examples (%): 1.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	66	76	95
+Res	88	5	83
+Dense	73	62	44
+	Goog 	Res 	Dense
+Goog	18	75	92
+Res	66	2	34
+Dense	39	9	1
+Cross-Section attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 97.00%, Avg loss: 0.115218 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 97.00%, Avg loss: 0.085681 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 99.00%, Avg loss: 0.074747 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 77.000
+test acc on PGD adversarial examples (%): 38.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 85.000
+test acc on PGD adversarial examples (%): 82.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 90.000
+test acc on PGD adversarial examples (%): 88.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 85.000
+test acc on PGD adversarial examples (%): 75.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 5.000
+test acc on PGD adversarial examples (%): 3.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 72.000
+test acc on PGD adversarial examples (%): 27.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 82.000
+test acc on PGD adversarial examples (%): 66.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 97.000
+test acc on FGM adversarial examples (%): 64.000
+test acc on PGD adversarial examples (%): 6.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 99.000
+test acc on FGM adversarial examples (%): 52.000
+test acc on PGD adversarial examples (%): 1.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	77	85	90
+Res	85	5	72
+Dense	82	64	52
+	Goog 	Res 	Dense
+Goog	38	82	88
+Res	75	3	27
+Dense	66	6	1
+Disjoint attack
+--------------------
+
+| Model Baselines |
+Evaluating Targets
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 93.00%, Avg loss: 0.153675 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 92.00%, Avg loss: 0.191465 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 92.00%, Avg loss: 0.288000 
+
+
+Starting attacks
+Target: googLeNet Substitute: googLeNet
+test acc on clean examples (%): 93.000
+test acc on FGM adversarial examples (%): 68.000
+test acc on PGD adversarial examples (%): 50.000
+Target: resnet50 Substitute: googLeNet
+test acc on clean examples (%): 92.000
+test acc on FGM adversarial examples (%): 81.000
+test acc on PGD adversarial examples (%): 80.000
+Target: densenet_121 Substitute: googLeNet
+test acc on clean examples (%): 92.000
+test acc on FGM adversarial examples (%): 87.000
+test acc on PGD adversarial examples (%): 86.000
+Target: googLeNet Substitute: resnet50
+test acc on clean examples (%): 93.000
+test acc on FGM adversarial examples (%): 73.000
+test acc on PGD adversarial examples (%): 61.000
+Target: resnet50 Substitute: resnet50
+test acc on clean examples (%): 92.000
+test acc on FGM adversarial examples (%): 8.000
+test acc on PGD adversarial examples (%): 8.000
+Target: densenet_121 Substitute: resnet50
+test acc on clean examples (%): 92.000
+test acc on FGM adversarial examples (%): 64.000
+test acc on PGD adversarial examples (%): 42.000
+Target: googLeNet Substitute: densenet_121
+test acc on clean examples (%): 93.000
+test acc on FGM adversarial examples (%): 80.000
+test acc on PGD adversarial examples (%): 69.000
+Target: resnet50 Substitute: densenet_121
+test acc on clean examples (%): 92.000
+test acc on FGM adversarial examples (%): 69.000
+test acc on PGD adversarial examples (%): 34.000
+Target: densenet_121 Substitute: densenet_121
+test acc on clean examples (%): 92.000
+test acc on FGM adversarial examples (%): 74.000
+test acc on PGD adversarial examples (%): 47.000
+
+Printing Attack Matrices
+
+	Goog 	Res 	Dense
+Goog	68	81	87
+Res	73	8	64
+Dense	80	69	74
+	Goog 	Res 	Dense
+Goog	50	80	86
+Res	61	8	42
+Dense	69	34	47

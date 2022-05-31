@@ -1,0 +1,63 @@
+Evaluatin Model: googLeNet
+Test Error: 
+ Accuracy: 95.00%, Avg loss: 0.129714 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 98.00%, Avg loss: 0.032772 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 100.00%, Avg loss: 0.011482 
+
+Evaluating model: googLeNet
+Test Error: 
+ Accuracy: 97.00%, Avg loss: 0.084523 
+
+Evaluating model: resnet50
+Test Error: 
+ Accuracy: 97.00%, Avg loss: 0.050490 
+
+Evaluating model: densenet_121
+Test Error: 
+ Accuracy: 98.00%, Avg loss: 0.031956 
+
+
+
+
+	  Goog 	Res Dense
+Goog	70	85	91
+Res	    86	6	79
+Dense	72	73	60
+
+	   Goog Res Dense
+Goog	66	76	95
+Res	    88	5	83
+Dense	73	62	44
+
+
+	   Goog Res Dense
+Goog	59	87	88
+Res	    80	4	82
+Dense	66	64	52
+
+
+
+
+
+      Goog 	Res Dense
+Goog	18	85	85
+Res	    68	3	42
+Dense	53	31	3
+
+
+	   Goog Res Dense
+Goog	18	75	92
+Res	    66	2	34
+Dense	39	9	1
+
+
+	   Goog Res Dense
+Goog	16	78	85
+Res	    65	2	33
+Dense	40	15	0

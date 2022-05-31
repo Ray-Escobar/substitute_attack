@@ -1,3 +1,4 @@
+from pyexpat import model
 import torch
 from torch import nn
 from data import OxfordPetsDataset, STANDARD_TRANSFORM, OX_STATS
@@ -33,36 +34,12 @@ def eval_loop(device, dataloader, model, criterion):
     print(f"Test Error: \n Accuracy: {(100*correct):>0.2f}%, Avg loss: {test_loss:>8f} \n")
 
 
-def eval_model_baselines(device, targets, substitutes, criterion):
-
-    test_transforms = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=OX_STATS["mean"], std=OX_STATS["std"])
-    ])
-    
-    ox_dataset_test = OxfordPetsDataset(
-        csv_path = './datasets/oxford-pets/annotations/trainval.txt', 
-        img_dir = './datasets/oxford-pets/images',
-        transform = test_transforms
-    )
-
-    dataloader = DataLoader(ox_dataset_test, batch_size=64, shuffle=False, num_workers=2)
-    
+def eval_model_baselines(device, targets, dataloader, criterion):
     # original eval for targets
     print('Evaluating Targets')
     for m in targets:
-        eval_loop(device, dataloader, m, criterion)
         torch.cuda.empty_cache()
-
-    print()
-    print('Evaluating Substitutes')
-    # original eval for subs
-    for m in substitutes:
         eval_loop(device, dataloader, m, criterion)
-        torch.cuda.empty_cache()
 
 def eval_attack(model, device, data, eps):
     model.eval()
@@ -70,7 +47,7 @@ def eval_attack(model, device, data, eps):
     # loss_fn = torch.nn.CrossEntropyLoss(reduction="mean")
     # loss_fn = nn.CrossEntropyLoss()
 
-    report = {'nb_test' : 0, 'correct': 0, 'correct_fgm':0, 'correct_pgd': 0}
+    report = {'nb_test' : 0, 'correct': 0, 'correct_fgsm':0, 'correct_pgd': 0}
     for x, y in data:
         x, y = x.to(device), y.to(device)
         
@@ -90,7 +67,7 @@ def eval_attack(model, device, data, eps):
         
         report['nb_test'] += y.size(0)
         report['correct'] += y_pred.eq(y).sum().item()
-        report['correct_fgm'] += y_pred_fgm.eq(y).sum().item()
+        report['correct_fgsm'] += y_pred_fgm.eq(y).sum().item()
         report['correct_pgd'] += y_pred_pgd.eq(y).sum().item()
     
     return report
@@ -111,7 +88,7 @@ def transfer_attack(device, target, substitute, dataloader, eps):
     # loss_fn = torch.nn.CrossEntropyLoss(reduction="mean")
     # loss_fn = nn.CrossEntropyLoss()
 
-    report = {'nb_test' : 0, 'correct': 0, 'correct_fgm':0, 'correct_pgd': 0}
+    report = {'nb_test' : 0, 'correct': 0, 'correct_fgsm':0, 'correct_pgd': 0}
     for x, y in dataloader:
         x, y = x.to(device), y.to(device)
         
@@ -132,25 +109,47 @@ def transfer_attack(device, target, substitute, dataloader, eps):
         
         report['nb_test'] += y.size(0)
         report['correct'] += y_pred.eq(y).sum().item()
-        report['correct_fgm'] += y_pred_fgm.eq(y).sum().item()
+        report['correct_fgsm'] += y_pred_fgm.eq(y).sum().item()
         report['correct_pgd'] += y_pred_pgd.eq(y).sum().item()
     
     return report
 
 
-def perform_attack_cross_section(device, targets, substitutes, dataloader, eps):
+def perform_grid_attack(device, targets, substitutes, dataloader, eps):
     '''
     targets - list of targets models
     substitutes - list of substitute models
     '''
-    torch.cuda.empty_cache()
-    for substitute in substitutes:
-        for target in targets:
+
+    results_fgsm = np.array([[0, 0, 0], 
+                              [0, 0, 0],
+                              [0, 0, 0]])
+    results_pgd = np.array([[0, 0, 0], 
+                             [0, 0, 0],
+                             [0, 0, 0]])
+
+    for i, substitute in enumerate(substitutes):
+        for j, target in enumerate(targets):
             torch.cuda.empty_cache()
             report = transfer_attack(device, target, substitute, dataloader, eps)
             print_report(report)
+            results_fgsm[i][j] = report['correct_fgsm']
+            results_pgd[i][j] = report['correct_pgd']
 
+    print()
+    print('Printing Attack Matrices\n')
+    print_attack_matrix('fgsm', results_fgsm)
+    print_attack_matrix('pgd', results_pgd)
     torch.cuda.empty_cache()
+
+def print_attack_matrix(name, attack_results):
+    models = ['Goog', 'Res', 'Dense']
+    print('\tGoog', '\tRes', '\tDense' )
+    for i in range(3):
+        s = models[i]
+        for j in range(3):
+            s += (f'\t{attack_results[i][j]}') 
+        print(s)
 
 def print_report(report):
     '''
@@ -162,7 +161,7 @@ def print_report(report):
         )
     )
     print("test acc on FGM adversarial examples (%): {:.3f}".format(
-            report['correct_fgm'] / report['nb_test'] * 100.0
+            report['correct_fgsm'] / report['nb_test'] * 100.0
         )
     )
     print(
@@ -171,30 +170,8 @@ def print_report(report):
         )
     )
 
-def symmetric_attack(device, dataloader, models_dir='./trained_models/symmetric', eval_baseline= False):
-    print('Running Symmetric Attack')
-    print('-'*20)
-    criterion = nn.CrossEntropyLoss()
-    targets = [
-        resnet50.load_resnet_50(f'{models_dir}/res_net_50_target.pth'),
-        googLeNet.load_goog_le_net(f'{models_dir}/goog_le_net_target.pth'),
-        dense.load_dense(f'{models_dir}/dense_121_target.pth')
-    ]
-
-    substitutes = [
-        resnet50.load_resnet_50(f'{models_dir}/res_net_50_target.pth'),
-        googLeNet.load_goog_le_net(f'{models_dir}/goog_le_net_subs.pth'),
-        dense.load_dense(f'{models_dir}/dense_121_subs.pth')
-    ]
-
-    if eval_baseline:
-        eval_model_baselines(device, targets, substitutes, criterion)
-
-    perform_attack_cross_section(device, targets, substitutes, dataloader, 0.1)
-
-
-def disjoint_attack(device, dataloader, models_dir='./trained_models/first_run_disjoint', eval_baseline= False):
-    print('Running Disjoint Attack')
+def attack(name, device, dataloader, models_dir='./trained_models/symmetric', eval_baseline= False):
+    print(name)
     print('-'*20)
     criterion = nn.CrossEntropyLoss()
     targets = [
@@ -205,14 +182,18 @@ def disjoint_attack(device, dataloader, models_dir='./trained_models/first_run_d
 
     substitutes = [
         googLeNet.load_goog_le_net(f'{models_dir}/goog_le_net_subs.pth'),
-        resnet50.load_resnet_50(f'{models_dir}/res_net_50_subs.pth'),
+        resnet50.load_resnet_50(f'{models_dir}/res_net_50_target.pth'),
         dense.load_dense(f'{models_dir}/dense_121_subs.pth')
     ]
 
     if eval_baseline:
-        eval_model_baselines(device, targets, substitutes, criterion)
+        print()
+        print('| Model Baselines |')
+        eval_model_baselines(device, targets, dataloader, criterion)
 
-    perform_attack_cross_section(device, targets, substitutes, dataloader, 0.1)
+    print()
+    print('Starting attacks')
+    perform_grid_attack(device, targets, substitutes, dataloader, 0.1)
 
 
 if __name__ == "__main__":
@@ -235,14 +216,22 @@ if __name__ == "__main__":
         row_skips= 6,
         transform = test_transforms
     )
-    
-    samples = np.random.choice(len(ox_dataset_test), 50, replace=False)
 
-    attack_set = torch.utils.data.Subset(ox_dataset_test, samples)
-    
-    dataloader = DataLoader(attack_set, batch_size=4, shuffle=False, num_workers=2)
 
-    # symmetric_attack(device, dataloader)
-    symmetric_attack(device, dataloader, eval_baseline=False, models_dir='./trained_models/symmetric_1')
-    disjoint_attack(device, dataloader, eval_baseline=False, models_dir='./trained_models/cross_section_2/')
-    disjoint_attack(device, dataloader, eval_baseline=False, models_dir='./trained_models/disjoint_2')
+    # print_attack_matrix('wow', results_fgsm)
+    # print(results)
+    # print(results.shape)
+    for i in range(3):
+        
+        samples = np.random.choice(len(ox_dataset_test), 100, replace=False)
+
+        attack_set = torch.utils.data.Subset(ox_dataset_test, samples)
+        
+        dataloader = DataLoader(attack_set, batch_size=25, shuffle=False, num_workers=2)
+
+        # symmetric_attack(device, dataloader)
+        attack("Symmetric attack", device, dataloader, eval_baseline=True, models_dir='./trained_models/symmetric_1')
+        print()
+        attack("Cross-Section attack", device, dataloader, eval_baseline=True, models_dir='./trained_models/cross_section_1')
+        print()
+        attack("Disjoint attack", device, dataloader, eval_baseline=True, models_dir='./trained_models/disjoint_1')

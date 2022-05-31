@@ -1,0 +1,31 @@
+	  Goog 	Res Dense
+Goog	68	81	87
+Res	    73	8	64
+Dense	80	69	74
+
+	  Goog 	Res Dense
+Goog	83	86	84
+Res	    75	7	67
+Dense	85	75	74
+
+	  Goog 	Res Dense
+Goog	79	90	94
+Res	    81	4	70
+Dense	84	79	76
+
+
+
+	  Goog 	Res Dense
+Goog	67	92	94
+Res	    66	3	31
+Dense	79	48	52
+
+	  Goog 	Res Dense
+Goog	66	85	87
+Res	    65	6	44
+Dense	77	46	56
+
+	  Goog 	Res Dense
+Goog	50	80	86
+Res	    61	8	42
+Dense	69	34	47
