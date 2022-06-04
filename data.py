@@ -114,7 +114,7 @@ class OxfordPetsDataset(Dataset):
         if self.transform:
             sample = self.transform(sample)
 
-        # subs 1 to labels to bring it down to 0, 1
+        # subtracts 1 to labels to bring it down to 0, 1
         return sample, torch.tensor(species-1)
 
     def __len__(self):
@@ -187,20 +187,6 @@ def normalize_params(dataset):
     std = [std_r,std_g,std_b]
 
     return mean, std
-
-def inverse_normalize(tensor, mean=(0.48141265, 0.44937795, 0.39572072), std=(0.26479402, 0.2600657, 0.26857644)):
-    '''
-    inverses a normalization
-    '''
-    mean = torch.as_tensor(mean, dtype=tensor.dtype, device=tensor.device)
-    std = torch.as_tensor(std, dtype=tensor.dtype, device=tensor.device)
-    if mean.ndim == 1:
-        mean = mean.view(-1, 1, 1)
-    if std.ndim == 1:
-        std = std.view(-1, 1, 1)
-
-    tensor.mul_(std).add_(mean)
-    return tensor
 
 def read_oxford_pets_csv():
     df = pd.read_csv("./datasets/oxford-pets/annotations/list.txt", sep=" ", skiprows=6)

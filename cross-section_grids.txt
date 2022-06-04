@@ -1,3 +1,4 @@
+Symmetric
 	  Goog 	Res Dense
 Goog	77	85	90
 Res	    85	5	72
@@ -9,7 +10,7 @@ Res	    83	2	67
 Dense	79	64	60
 
 
-
+Cross-Section
 	  Goog 	Res Dense
 Goog	77	91	93
 Res	    87	1	73
@@ -21,7 +22,7 @@ Res	    77	1	25
 Dense	72	6	6
 
 
-
+Disjoint
 	   Goog Res Dense
 Goog	44	82	87
 Res	    75	2	28

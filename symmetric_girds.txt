@@ -24,7 +24,7 @@ Test Error:
 
 
 
-
+FGSM
 	  Goog 	Res Dense
 Goog	70	85	91
 Res	    86	6	79
@@ -42,9 +42,7 @@ Res	    80	4	82
 Dense	66	64	52
 
 
-
-
-
+PGD
       Goog 	Res Dense
 Goog	18	85	85
 Res	    68	3	42

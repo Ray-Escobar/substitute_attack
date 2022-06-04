@@ -19,10 +19,9 @@ import json
 
 def models_to_train():
     return {
-        'dense_121' : dense.full_dense,
         'goog_le_net': googLeNet.full_goog_le_net,
+        'dense_121' : dense.full_dense,
         'res_net_50': resnet50.full_resnet_50,
-        # 'convNeXt': cnx.full_convNext,
     }
 
 def train_model(model, dataloaders, criterion, optimizer, scheduler, num_epochs=25, device='cpu'):
@@ -211,7 +210,10 @@ def train_disjoint_models(device, proj_name, csv_path, cross_section = 0):
         persist_model(subs_model, f"{name}_subs", path=f'./trained_models/{proj_name}')
 
 
-def train_symmetric_models(device, proj_name):
+def train_symmetric_models(device, proj_name, adv=True):
+    '''
+    adv - if True it trains a subsitute as well
+    '''
     print('Training Symmetric Models')
         
     print('-'*20)
@@ -233,15 +235,16 @@ def train_symmetric_models(device, proj_name):
         target_model = train_model(target, dataloaders, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=9, device=device)
         persist_model(target_model, f"{name}_target", path=f'./trained_models/{proj_name}')
 
-        print()
-        torch.cuda.empty_cache()
-        print("Training substitute")
-        substitute = gen_model(device)
-        optimizer_conv = optim.Adam(substitute.parameters(), lr=0.001) #, momentum=0.9)
-        exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=5, gamma=0.1)
+        if adv:
+            print()
+            torch.cuda.empty_cache()
+            print("Training substitute")
+            substitute = gen_model(device)
+            optimizer_conv = optim.Adam(substitute.parameters(), lr=0.001) #, momentum=0.9)
+            exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_conv, step_size=5, gamma=0.1)
 
-        subs_model = train_model(substitute, dataloaders, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=9, device=device)
-        persist_model(subs_model, f"{name}_subs", path=f'./trained_models/{proj_name}')
+            subs_model = train_model(substitute, dataloaders, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=9, device=device)
+            persist_model(subs_model, f"{name}_subs", path=f'./trained_models/{proj_name}')
 
 
 def create_dataloaders(datasets):
@@ -261,7 +264,7 @@ if __name__ == "__main__":
 
     # dense.full_dense(device)
     # torch.cuda.empty_cache()
-    train_symmetric_models(device, 'symmetric_1')
-    train_disjoint_models(device, "cross_section_2", csv_path, cross_section=8)
-    train_disjoint_models(device, "disjoint_2", csv_path, cross_section=0)
+    train_symmetric_models(device, 'adv_data_gens')
+    # train_disjoint_models(device, "cross_section_2", csv_path, cross_section=8)
+    # train_disjoint_models(device, "disjoint_2", csv_path, cross_section=0)
     

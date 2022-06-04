@@ -72,6 +72,46 @@ def eval_attack(model, device, data, eps):
     
     return report
 
+def generally_adversarial(device, models, adv_x, y):
+    '''
+    Checks if an image is adversarial in all models
+    given a list of models.
+    '''
+    with torch.no_grad():
+
+        adv_x = adv_x.to(device).unsqueeze(0)
+        for model in models:
+            model.eval()
+            model.to(device)    
+            _, y_pred = model(adv_x).max(1)
+            if y.item() == y_pred.item():
+                return False
+    return True
+
+def single_attack(device, model, x):
+
+    model.eval()
+
+    min = torch.min(x).item()
+    max = torch.max(x).item()
+    
+    x = x.to(device).unsqueeze(0)
+    model.to(device)
+
+
+    # model prediction on clean examples
+    _, y_pred = model(x).max(1)
+
+    x_pgd = projected_gradient_descent(model, x, 0.1, 0.001, 60, np.inf, clip_min= min, clip_max = max)# )
+    
+    # model prediction on PGD adversarial examples
+    _, y_pred_pgd = model(x_pgd).max(1)  
+
+    return x_pgd.detach()[0], y_pred, y_pred_pgd
+    # examples.append((x_fgm.squeeze().detach().cpu().numpy(), x_pgd.squeeze().detach().cpu().numpy(), y_pred_fgm, y_pred_pgd, y_pred))
+    
+
+
 def transfer_attack(device, target, substitute, dataloader, eps):
     '''
     target - some model
